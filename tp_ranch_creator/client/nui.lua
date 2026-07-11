@@ -135,11 +135,11 @@ function OpenRanchCreator(ranchId)
 		PlayerData.SelectedRanchId = tonumber(ranchId)
 	end
 
-	TOTAL_HERDING_SPAWN_POINTS = nil
+	ENTITIES_CONFIG_DATA = {}
 	TOTAL_HERDING_SPAWN_POINTS = {}
-
-	TOTAL_HERDING_POINTS = nil 
 	TOTAL_HERDING_POINTS = {}
+	TOTAL_HERDING_WOLF_ATTACK_SPAWN_POINTS = {}
+	PLACED_RANCH_ENTITIES = {}
 
 	local BUTTONS = {
 
