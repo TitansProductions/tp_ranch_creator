@@ -94,7 +94,9 @@ RegisterNUICallback('startEggPlacement', function(data)
 
 	if PLACED_RANCH_ENTITIES['CHICKEN-EGG_SPAWN-' .. egg_index] then
 		obj = PLACED_RANCH_ENTITIES[action_index].entity
-		SetEntityCollision(obj, false) -- 1.0.1
+
+		SetEntityCollision(obj, false)
+
 	else
 		local playerCoords = GetEntityCoords(playerPed)
 
@@ -285,7 +287,8 @@ RegisterNUICallback('startCoordsPlacement', function(data)
 
 		if PLACED_RANCH_ENTITIES[action_index] then
 			obj = PLACED_RANCH_ENTITIES[action_index].entity
-	    	SetEntityCollision(obj, false) -- 1.0.1
+
+			SetEntityCollision(obj, false)
 		else
 			obj = CreateObject(GetHashKey(Builder.ModelEntity), playerCoords.x, playerCoords.y, playerCoords.z, false, false, false, false, false)
 			SetEntityVisible(obj, true)
@@ -319,7 +322,9 @@ RegisterNUICallback('startCoordsPlacement', function(data)
 			entity = PLACED_RANCH_ENTITIES[action_index].entity
 
 			pitch, roll, yaw = 0.0, 0.0, (PLACED_RANCH_ENTITIES[action_index].coords.h + 180.0) % 360.0
-	    	SetEntityCollision(entity, false) -- 1.0.1
+
+			SetEntityCollision(entity, false)
+
 		else
 			entity = CreatePed(GetHashKey(Builder.ModelEntity), playerCoords.x, playerCoords.y, playerCoords.z, GetEntityHeading(PlayerPedId()), false, false, false, false )
 			
@@ -430,7 +435,7 @@ RegisterNUICallback('startCoordsPlacement', function(data)
 				end
 
 				if action_index == 'HAY_BARREL' then 
-					returned_input_text = string.format('{ x = %s, y = %s, z = %s }', coords.x, coords.y, coords.z - 1.0)
+					returned_input_text = string.format('{ x = %s, y = %s, z = %s }', coords.x, coords.y, coords.z)
 				end
 
 				local objectCoords, _pitch, _roll, _yaw
@@ -443,7 +448,7 @@ RegisterNUICallback('startCoordsPlacement', function(data)
 				end
 
 				if action_index == 'MILK_CONTAINER_2' then -- deliver milk jug
-					returned_input_text = string.format('{ x = %s, y = %s, z = %s, action_distance = 0.9 }', coords.x, coords.y, coords.z - 1.0)
+					returned_input_text = string.format('{ x = %s, y = %s, z = %s, action_distance = 0.9 }', coords.x, coords.y, coords.z)
 				end
 
 				if action_index == 'PITCH_FORK' then
@@ -455,7 +460,7 @@ RegisterNUICallback('startCoordsPlacement', function(data)
 				end
 
 				if action_index == 'CAULDRON_2' then
-					returned_input_text = string.format('{ x = %s, y = %s, z = %s, h = %s }', coords.x, coords.y, coords.z - 1.0, GetEntityHeading(PlayerPedId()))
+					returned_input_text = string.format('{ x = %s, y = %s, z = %s, h = %s }', coords.x, coords.y, coords.z, GetEntityHeading(PlayerPedId()))
 				end
 
 				if is_animal_section then 
@@ -545,6 +550,10 @@ RegisterNUICallback('startCoordsPlacement', function(data)
 						SetEntityCanBeDamaged(_entity, false)
 						SetRelationshipBetweenGroups(1, GetPedRelationshipGroupHash(_entity), joaat('PLAYER'))
 
+						if Builder.ModelEntity == 'a_c_chicken_01' then 
+							PlaceEntityOnGroundProperly(_entity, true)
+						end
+
 						local newCoords = { x = objectCoords.x, y = objectCoords.y, z = objectCoords.z - 1.0, h = oppositeHeading}
 
 						PLACED_RANCH_ENTITIES[action_index] = { entity = _entity, is_object = false, model = Builder.ModelEntity, coords = newCoords }
@@ -579,6 +588,10 @@ RegisterNUICallback('startCoordsPlacement', function(data)
 							SetEntityInvincible(obj_data.entity, true)
 							SetEntityCanBeDamaged(obj_data.entity, false)
 							SetRelationshipBetweenGroups(1, GetPedRelationshipGroupHash(obj_data.entity), joaat('PLAYER'))
+
+							if obj_data.model == 'a_c_chicken_01' then 
+								PlaceEntityOnGroundProperly(obj_data.entity, true)
+							end
 											
 						end
 
