@@ -141,6 +141,8 @@ function OpenRanchCreator(ranchId)
 	TOTAL_HERDING_WOLF_ATTACK_SPAWN_POINTS = {}
 	PLACED_RANCH_ENTITIES = {}
 
+	CURRENT_LOADED_DATA_COUNT = 0
+
 	local BUTTONS = {
 
 		'COST',
