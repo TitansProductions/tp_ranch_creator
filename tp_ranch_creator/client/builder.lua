@@ -94,7 +94,7 @@ RegisterNUICallback('startEggPlacement', function(data)
 
 	if PLACED_RANCH_ENTITIES['CHICKEN-EGG_SPAWN-' .. egg_index] then
 		obj = PLACED_RANCH_ENTITIES[action_index].entity
-
+		SetEntityCollision(obj, false) -- 1.0.1
 	else
 		local playerCoords = GetEntityCoords(playerPed)
 
@@ -285,6 +285,7 @@ RegisterNUICallback('startCoordsPlacement', function(data)
 
 		if PLACED_RANCH_ENTITIES[action_index] then
 			obj = PLACED_RANCH_ENTITIES[action_index].entity
+	    	SetEntityCollision(obj, false) -- 1.0.1
 		else
 			obj = CreateObject(GetHashKey(Builder.ModelEntity), playerCoords.x, playerCoords.y, playerCoords.z, false, false, false, false, false)
 			SetEntityVisible(obj, true)
@@ -318,7 +319,7 @@ RegisterNUICallback('startCoordsPlacement', function(data)
 			entity = PLACED_RANCH_ENTITIES[action_index].entity
 
 			pitch, roll, yaw = 0.0, 0.0, (PLACED_RANCH_ENTITIES[action_index].coords.h + 180.0) % 360.0
-
+	    	SetEntityCollision(entity, false) -- 1.0.1
 		else
 			entity = CreatePed(GetHashKey(Builder.ModelEntity), playerCoords.x, playerCoords.y, playerCoords.z, GetEntityHeading(PlayerPedId()), false, false, false, false )
 			
