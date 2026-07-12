@@ -1384,7 +1384,12 @@ $(function () {
 -- Set to false if you want everyone to be able to be added as a member on this ranch,
 -- otherwise, add the desired jobs to join when having only the required job(s).
 -- For adding a job(s), it requires a table form such as: { "job1", "job2" }
-AddMemberRequiredJobs = { ${jobsText} },
+AddMemberRequiredJobs = ${(jobsText === false || jobsText === "false") ? "false" : `{ ${jobsText} }`},
+
+AddMemberRequiredJobsNotify = {
+  text = 'You cannot add as a member the specified user, this player does not have the required job.',
+  duration = 6
+},
         `;
 
         break;
@@ -1926,7 +1931,8 @@ GiveRequiredJobMoney = {
     NotifyDuration = 10
 },
 
-AddMemberRequiredJobs = { ${jobsText} },
+AddMemberRequiredJobs = ${(jobsText === false || jobsText === "false") ? "false" : `{ ${jobsText} }`},
+
 AddMemberRequiredJobsNotify = {
     text = 'You cannot add as a member the specified user, this player does not have the required job.',
     duration = 6
