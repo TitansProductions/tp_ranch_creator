@@ -31,8 +31,8 @@ RegisterNUICallback('startHerdingPointPlacement', function(data)
 				local heading = GetEntityHeading(PlayerPedId())
 
 				if action_index == 'SPAWN_POINT' then 
-					TOTAL_HERDING_SPAWN_POINTS[spawnpoint] = { x = coords.x, y = coords.y, z = coords.z - 1.0, h = heading }
-					returned_input_text = string.format('{ x = %s, y = %s, z = %s, h = %s }', coords.x, coords.y, coords.z - 1.0, heading)
+					TOTAL_HERDING_SPAWN_POINTS[spawnpoint] = { x = coords.x, y = coords.y, z = coords.z, h = heading }
+					returned_input_text = string.format('{ x = %s, y = %s, z = %s, h = %s }', coords.x, coords.y, coords.z, heading)
 
 					SendNUIMessage({
 						action = 'updateHerdingInputByName', 
@@ -75,7 +75,7 @@ RegisterNUICallback('startHerdingPointPlacement', function(data)
 					end
 
 					spawnpoint = GetTableLength(TOTAL_HERDING_WOLF_ATTACK_SPAWN_POINTS) + 1
-					TOTAL_HERDING_WOLF_ATTACK_SPAWN_POINTS[spawnpoint] = { model = "a_c_wolf", skin_preset = 0, x = coords.x, y = coords.y, z = coords.z - 1.0, h = heading }
+					TOTAL_HERDING_WOLF_ATTACK_SPAWN_POINTS[spawnpoint] = { model = "a_c_wolf", skin_preset = 0, x = coords.x, y = coords.y, z = coords.z, h = heading }
 
 					if GetTableLength(TOTAL_HERDING_WOLF_ATTACK_SPAWN_POINTS) > 0 then
 							
