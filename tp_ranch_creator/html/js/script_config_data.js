@@ -59,6 +59,62 @@ function FormatLuaTable(obj, indent = "    ", wrapInArray = false) {
   return `        [1] = {\n${result.join(",\n")}\n        }`;
 }
 
+
+function FormatLuaInLine(value, indent = "        ", wrapper, inline = true) {
+
+  const order = [
+    "model",
+    "skin_preset",
+    "x", "y", "z", "h",
+    "pitch", "roll", "yaw",
+    "render_distance",
+    "action_distance",
+    "display_icon_distance",
+    "adjust_icon_height"
+  ];
+
+  function FormatInline(obj) {
+    const result = [];
+
+    // Ordered keys first
+    for (const key of order) {
+      if (obj[key] !== undefined) {
+        result.push(`${key} = ${FormatLuaValue(obj[key])}`);
+      }
+    }
+
+    // Any remaining keys afterwards
+    for (const [key, value] of Object.entries(obj)) {
+      if (!order.includes(key)) {
+        result.push(`${key} = ${FormatLuaValue(value)}`);
+      }
+    }
+
+    return result.join(", ");
+  }
+
+  // Default config (single object)
+  if (!Array.isArray(value)) {
+    if (inline) {
+      return FormatInline(value);
+    }
+
+    return FormatLuaTable(value, indent, wrapper);
+  }
+
+  // Latest config (array of objects)
+  return value.map((obj, index) => {
+
+    if (inline) {
+      return `${indent}[${index + 1}] = { ${FormatInline(obj)} }`;
+    }
+
+    return `${indent}[${index + 1}] = {\n${FormatLuaTable(obj, indent + "    ", false)}\n${indent}}`;
+
+  }).join(",\n");
+
+}
+
 function FormatLua(value, indent = "        ", wrapper) {
 
   // Default config (single object)
