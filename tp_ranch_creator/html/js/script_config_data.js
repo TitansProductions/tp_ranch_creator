@@ -140,13 +140,13 @@ function GetChickenConfigData(spawnCoords, eggSpawnCoords, feedbagStandCoords, f
     Total = ${count},
 
     SpawnCoords = {
-${FormatLua(spawnCoords, "        ", true)}
+${FormatLuaInLine(spawnCoords, "        ", true)}
     },
 
     -- The egg spawning positions (this is the best way to handle correct spawn positions)
     -- s_gatoregg01x
     EggSpawnCoords = {
-${FormatLua(eggSpawnCoords, "        ", true)}
+${FormatLuaInLine(eggSpawnCoords, "        ", true)}
     },
 
     -- The feedbag hang to pickup a feeding bucket to feed chickens.
