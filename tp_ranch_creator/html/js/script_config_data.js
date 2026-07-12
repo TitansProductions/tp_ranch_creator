@@ -95,27 +95,24 @@ ${FormatLua(eggSpawnCoords, "        ", true)}
 
     -- The feedbag hang to pickup a feeding bucket to feed chickens.
     FeedbagStandCoords = {
-${FormatLua(feedbagStandCoords, "        ", false)}
-        render_distance = 30.0,
-        action_distance = 1.5,
-        display_icon_distance = 5.0,
-        adjust_icon_height = 2.0,
+${FormatLua(feedbagStandCoords, "    ", false)
+      .replace(/^\s*\[\d+\]\s*=\s*{\n/, "")
+      .replace(/\n\s*}$/, "")}
     },
 
     -- The radius to feed the chickens between player distance and @SpawnCoords
     -- DO NOT MAKE THE COORDS OR THE MAXIMUM DISTANCE BE IN THE SAME LOCATION AS THE FEEDBAG STAND!
     StartFeedingCoords = {
-${FormatLua(feedingCoords, "        ", false)}
-        display_icon_distance = 5.0,
-        action_distance = 2.5,
-        adjust_icon_height = 0.5,
+${FormatLua(feedingCoords, "    ", false)
+      .replace(/^\s*\[\d+\]\s*=\s*{\n/, "")
+      .replace(/\n\s*}$/, "")}
     },
 
     -- The coords to add food for the chicken.
     ChickenFoodCoords = {
-${FormatLua(deliverFoodCoords, "        ", false)}
-        adjust_icon_height = 1.0,
-        action_distance = 1.3,
+${FormatLua(deliverFoodCoords, "    ", false)
+      .replace(/^\s*\[\d+\]\s*=\s*{\n/, "")
+      .replace(/\n\s*}$/, "")}
     },
 },
 `;
