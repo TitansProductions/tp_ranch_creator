@@ -1654,7 +1654,7 @@ Herding = {
     -- The spawn points of the maximum cows, goats or sheep to take out.
     -- (!) Insert the maximum animals count you are having in the spawn points - the higher count (except chicken), which means if you have 2 cows and 4 goats, you need (4) herding spawn points in total.
     SpawnPoints = {
-${FormatLua(HERDING_LATEST_SPAWN_POINTS_CONFIG_DATA, "        ", true)}
+${FormatLuaInLine(HERDING_LATEST_SPAWN_POINTS_CONFIG_DATA, "        ", true)}
     },
           
     -- Should the herding be cancelled once the player goes too far while herding?
@@ -1675,7 +1675,7 @@ ${FormatLua(HERDING_LATEST_SPAWN_POINTS_CONFIG_DATA, "        ", true)}
 
         RGBA = {r = 255, g = 255, b = 255, a = 55},
 
-${FormatLua(HERDING_LATEST_HERDING_POINTS_CONFIG_DATA, "        ", true)}
+${FormatLuaInLine(HERDING_LATEST_HERDING_POINTS_CONFIG_DATA, "        ", true)}
     },
 
     WolfAttack = {
@@ -1695,7 +1695,7 @@ ${FormatLua(HERDING_LATEST_HERDING_POINTS_CONFIG_DATA, "        ", true)}
         -- (!) Permitted Models { a_c_wolf, a_c_wolf_medium, a_c_wolf_small, mp_a_c_wolf_01 }
         SpawnPoints = {
 
-${HERDING_WOLF_SPAWN_POINTS_CONFIG_DATA == null ? "" : FormatLua(HERDING_WOLF_SPAWN_POINTS_CONFIG_DATA, "            ", true)}
+${HERDING_WOLF_SPAWN_POINTS_CONFIG_DATA == null ? "" : FormatLuaInLine(HERDING_WOLF_SPAWN_POINTS_CONFIG_DATA, "            ", true)}
         },
 
     },
@@ -1977,7 +1977,7 @@ Herding = {
     -- The spawn points of the maximum cows, goats or sheep to take out.
     -- (!) Insert the maximum animals count you are having in the spawn points - the higher count (except chicken), which means if you have 2 cows and 4 goats, you need (4) herding spawn points in total.
     SpawnPoints = {
-${FormatLua(HERDING_LATEST_SPAWN_POINTS_CONFIG_DATA, "        ", true)}
+${FormatLuaInLine(HERDING_LATEST_SPAWN_POINTS_CONFIG_DATA, "        ", true)}
     },
           
     -- Should the herding be cancelled once the player goes too far while herding?
@@ -1998,7 +1998,7 @@ ${FormatLua(HERDING_LATEST_SPAWN_POINTS_CONFIG_DATA, "        ", true)}
 
         RGBA = {r = 255, g = 255, b = 255, a = 55},
 
-${FormatLua(HERDING_LATEST_HERDING_POINTS_CONFIG_DATA, "        ", true)}
+${FormatLuaInLine(HERDING_LATEST_HERDING_POINTS_CONFIG_DATA, "        ", true)}
     },
 
     WolfAttack = {
@@ -2020,7 +2020,7 @@ ${FormatLua(HERDING_LATEST_HERDING_POINTS_CONFIG_DATA, "        ", true)}
         -- (!) Permitted Models { a_c_wolf, a_c_wolf_medium, a_c_wolf_small, mp_a_c_wolf_01 }
         SpawnPoints = {
 
-${HERDING_WOLF_SPAWN_POINTS_CONFIG_DATA == null ? "" : FormatLua(HERDING_WOLF_SPAWN_POINTS_CONFIG_DATA, "            ", true)}
+${HERDING_WOLF_SPAWN_POINTS_CONFIG_DATA == null ? "" : FormatLuaInLine(HERDING_WOLF_SPAWN_POINTS_CONFIG_DATA, "            ", true)}
         },
     },
 },
