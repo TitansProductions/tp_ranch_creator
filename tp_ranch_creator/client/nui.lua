@@ -249,7 +249,7 @@ function OpenRanchCreator(ranchId)
 					
 					if Config.HerdingActionMarkers.Enabled then
 						local RGBA = Config.HerdingActionMarkers.RGBA
-						Citizen.InvokeNative(0x2A32FAA57B937173, 0x94FDAE17, pointCoords.x, pointCoords.y, pointCoords.z, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.3, RGBA.r, RGBA.g, RGBA.b, RGBA.a, false, true, 2, false, false, false, false)
+						Citizen.InvokeNative(0x2A32FAA57B937173, 0x94FDAE17, pointCoords.x, pointCoords.y, pointCoords.z - 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.3, RGBA.r, RGBA.g, RGBA.b, RGBA.a, false, true, 2, false, false, false, false)
 					end
 
 				end
