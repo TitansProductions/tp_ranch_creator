@@ -10,6 +10,10 @@ function Indent(text, indent = "    ") {
 
 
 function FormatLuaValue(value) {
+  if (value === null || value === undefined) {
+    return "nil";
+  }
+
   if (typeof value === "string") {
     return `"${value}"`;
   }
@@ -18,7 +22,21 @@ function FormatLuaValue(value) {
     return value ? "true" : "false";
   }
 
-  return value;
+  if (typeof value === "number") {
+    return value;
+  }
+
+  if (Array.isArray(value)) {
+    return `{ ${value.map(v => FormatLuaValue(v)).join(", ")} }`;
+  }
+
+  if (typeof value === "object") {
+    return `{ ${Object.entries(value)
+      .map(([key, val]) => `${key} = ${FormatLuaValue(val)}`)
+      .join(", ")} }`;
+  }
+
+  return String(value);
 }
 
 function FormatLuaTable(obj, indent = "    ", wrapInArray = false) {
@@ -30,7 +48,12 @@ function FormatLuaTable(obj, indent = "    ", wrapInArray = false) {
     "render_distance",
     "action_distance",
     "display_icon_distance",
-    "adjust_icon_height"
+    "icon",
+    "adjust_icon_height",
+    "marker",
+    "marker_xy",
+    "marker_rgba",
+    "adjust_marker_height",
   ];
 
   const result = [];
@@ -70,7 +93,12 @@ function FormatLuaInLine(value, indent = "        ", wrapper, inline = true) {
     "render_distance",
     "action_distance",
     "display_icon_distance",
-    "adjust_icon_height"
+    "icon",
+    "adjust_icon_height",
+    "marker",
+    "marker_xy",
+    "marker_rgba",
+    "adjust_marker_height",
   ];
 
   function FormatInline(obj) {
@@ -128,6 +156,44 @@ function FormatLua(value, indent = "        ", wrapper) {
   }).join(",\n");
 
 
+}
+
+function FormatLua2(value, indent = "        ", wrapper) {
+
+  // Array
+  if (Array.isArray(value)) {
+    return value.map((obj, index) => {
+      return `${indent}[${index + 1}] = {\n${FormatLuaTable(obj, indent + "    ", false)}\n${indent}}`;
+    }).join(",\n");
+  }
+
+  // Object containing numeric keys (e.g. { RGBA = ..., 1 = ..., 2 = ... })
+  const numericKeys = Object.keys(value).filter(key => /^\d+$/.test(key));
+
+  if (numericKeys.length > 0) {
+    const result = [];
+
+    // Preserve any non-numeric keys first (RGBA, etc.)
+    for (const [key, obj] of Object.entries(value)) {
+      if (!/^\d+$/.test(key)) {
+        result.push(`${indent}${key} = ${FormatLuaValue(obj)}`);
+      }
+    }
+
+    // Then numeric entries
+    numericKeys
+      .sort((a, b) => Number(a) - Number(b))
+      .forEach(key => {
+        result.push(
+          `${indent}[${key}] = {\n${FormatLuaTable(value[key], indent + "    ", false)}\n${indent}}`
+        );
+      });
+
+    return result.join(",\n\n");
+  }
+
+  // Normal object
+  return FormatLuaTable(value, indent, wrapper);
 }
 
 function GetChickenConfigData(spawnCoords, eggSpawnCoords, feedbagStandCoords, feedingCoords, deliverFoodCoords) {
