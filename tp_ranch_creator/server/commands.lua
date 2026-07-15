@@ -27,11 +27,12 @@ RegisterCommand('openrancheditor', function(source, args)
     end
 
     while await do
-        print('3')
         Wait(100)
     end
     
     if hasPermissions then
+
+        local ranchId = args[1] -- 1.0.2
 
         TriggerClientEvent("tp_ranch_creator:client:open", _source, ranchId)
 
@@ -54,5 +55,6 @@ end, false)
 RegisterServerEvent("tp_ranch_creator:server:addChatSuggestions")
 AddEventHandler("tp_ranch_creator:server:addChatSuggestions", function()
     local _source = source
-    TriggerClientEvent("chat:addSuggestion", _source, "/openrancheditor", " " .. Config.Command.Suggestion, {})
+    TriggerClientEvent("chat:addSuggestion", _source, "/openrancheditor", " " .. Config.Command.Suggestion, {
+        { name = "ranch", help = 'Insert an existing ranch directly from tp_ranch config to edit ( leave empty for new ranch )' } }) -- 1.0.2
 end)
