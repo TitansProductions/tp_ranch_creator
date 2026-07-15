@@ -13,10 +13,14 @@ let HERDING_LATEST_SPAWN_POINTS_CONFIG_DATA = null;
 let HERDING_LATEST_HERDING_POINTS_CONFIG_DATA = null;
 let HERDING_WOLF_SPAWN_POINTS_CONFIG_DATA = null;
 
+let DISPLAY_RANCH_ID_CONFIG_DATA = 'INSERT_RANCH_UNIQUE_ID_HERE';
+
 function CloseNUI() {
   $("#main").fadeOut();
   HideAll();
   ClearAll();
+
+  DISPLAY_RANCH_ID_CONFIG_DATA = 'INSERT_RANCH_UNIQUE_ID_HERE';
 
   $.post('http://tp_ranch_creator/close', JSON.stringify({}));
 }
@@ -540,6 +544,81 @@ $(function () {
     } else if (item.action == 'sendLatestHerdingWolfAttacksConfigData') {
 
       HERDING_WOLF_SPAWN_POINTS_CONFIG_DATA = item.config_data;
+
+    } else if (item.action == 'setExistingDataBasics') {
+
+      let prod_result = item.result;
+
+      DISPLAY_RANCH_ID_CONFIG_DATA = item.ranchId;
+
+      $("#main-cost-input").val(prod_result.Cost.Amount);
+      $("#main-cost-method-input").val(prod_result.Cost.Account);
+
+      $("#item_radio").prop("checked", prod_result.Cost.IsItem);
+      $("#not_item_radio").prop("checked", !prod_result.Cost.IsItem);
+
+      let requiredJobs = prod_result.AddMemberRequiredJobs;
+
+      if (requiredJobs === false || requiredJobs === "false") {
+        requiredJobs = "false";
+      } else if (Array.isArray(requiredJobs)) {
+        requiredJobs = requiredJobs.join(", ");
+      } else if (typeof requiredJobs === "string") {
+        requiredJobs = requiredJobs
+          .replace(/[{}]/g, "")
+          .replace(/"/g, "")
+          .trim();
+      }
+
+      $("#main-required-jobs-input").val(requiredJobs);
+
+      $("#main-coords-position-input").val(`vector3(${prod_result.Coords.x}, ${prod_result.Coords.y}, ${prod_result.Coords.z})`);
+
+      const animals = prod_result.AnimalStore.Animals || [];
+
+      const animalConfig = [
+        { id: "animal-store-chicken-switch", name: "a_c_chicken_01" },
+        { id: "animal-store-sheep-switch", name: "a_c_sheep_01" },
+        { id: "animal-store-cow-switch", name: "a_c_cow" },
+        { id: "animal-store-goat-switch", name: "a_c_goat_01" },
+        { id: "animal-store-pig-switch", name: "a_c_pig_01" }
+      ];
+
+      animalConfig.forEach(({ id, name }) => {
+        $("#" + id).prop("checked", animals.includes(name));
+      });
+
+
+      $("#milk-container-position-input").val(FormatLuaInLine(prod_result.MilkContainerCoords));
+      $("#milk-container-deliver-input").val(FormatLuaInLine(prod_result.DeliverProductCoords));
+
+      $("#water-barrel-position-input").val(FormatLuaInLine(prod_result.WaterBarrelCoords));
+
+      $("#hay-barrel-position-input").val(FormatLuaInLine(prod_result.HayFoodCoords));
+
+      $("#hay-barrel-display-icon-label").prop("checked", prod_result.HayFoodCoords.display_icon);
+      $("#hay-barrel-display-not-icon-label").prop("checked", !prod_result.HayFoodCoords.display_icon);
+
+      $("#pitch-fork-position-input").val(FormatLuaInLine(prod_result.PitchForkObjectCoords));
+
+      $("#cauldron-position-input").val(FormatLuaInLine(prod_result.CauldronObject));
+      $("#cauldron-teleport-input").val(FormatLuaInLine(prod_result.TeleportPlayerOnCauldron));
+
+
+      $("#animals-cow-amount-input").val(prod_result.Animals['a_c_cow'].Total);
+      $("#animals-goat-amount-input").val(prod_result.Animals['a_c_goat_01'].Total);
+      $("#animals-chicken-amount-input").val(prod_result.Animals['a_c_chicken_01'].Total);
+      $("#animals-sheep-amount-input").val(prod_result.Animals['a_c_sheep_01'].Total);
+      $("#animals-pig-amount-input").val(prod_result.Animals['a_c_pig_01'].Total);
+
+    } else if (item.action == 'setHerdingExistingData') {
+
+      let wolf_data = item.wolf_data;
+
+      $("#herding-wolf-attacks-chance-input").val(wolf_data.Chance);
+
+      $("#wolf_attacks_disabled_radio").prop("checked", !wolf_data.Enabled);
+      $("#wolf_attacks_enabled_radio").prop("checked", wolf_data.Enabled);
 
     } else if (item.action == 'displayAllConfigData') {
 
@@ -1638,9 +1717,7 @@ TeleportPlayerOnCauldron = ${cauldron2Coords},
     -- (!) Herding Points are also the maximum animals that go out for herding.
     HerdingPoints = {
 
-        RGBA = {r = 255, g = 255, b = 255, a = 55},
-
-${FormatLua(HERDING_LATEST_HERDING_POINTS_CONFIG_DATA, "        ", true)}
+${FormatLua2(HERDING_LATEST_HERDING_POINTS_CONFIG_DATA, "        ", true)}
     },
 
     `;
@@ -1673,9 +1750,7 @@ ${FormatLuaInLine(HERDING_LATEST_SPAWN_POINTS_CONFIG_DATA, "        ", true)}
     -- (!) Herding Points are also the maximum animals that go out for herding.
     HerdingPoints = {
 
-        RGBA = {r = 255, g = 255, b = 255, a = 55},
-
-${FormatLuaInLine(HERDING_LATEST_HERDING_POINTS_CONFIG_DATA, "        ", true)}
+${FormatLua2(HERDING_LATEST_HERDING_POINTS_CONFIG_DATA, "        ", true)}
     },
 
     WolfAttack = {
@@ -1996,9 +2071,7 @@ ${FormatLuaInLine(HERDING_LATEST_SPAWN_POINTS_CONFIG_DATA, "        ", true)}
     -- (!) Herding Points are also the maximum animals that go out for herding.
     HerdingPoints = {
 
-        RGBA = {r = 255, g = 255, b = 255, a = 55},
-
-${FormatLuaInLine(HERDING_LATEST_HERDING_POINTS_CONFIG_DATA, "        ", true)}
+${FormatLua2(HERDING_LATEST_HERDING_POINTS_CONFIG_DATA, "        ", true)}
     },
 
     WolfAttack = {
@@ -2026,7 +2099,7 @@ ${HERDING_WOLF_SPAWN_POINTS_CONFIG_DATA == null ? "" : FormatLuaInLine(HERDING_W
 },
     `;
 
-    RETRIEVED_CLASS_CONFIG_DATA = `[INSERT_RANCH_UNIQUE_ID_HERE] = {\n${Indent(ranchConfig)}\n},`;
+    RETRIEVED_CLASS_CONFIG_DATA = `[${DISPLAY_RANCH_ID_CONFIG_DATA}] = {\n${Indent(ranchConfig)}\n},`;
 
     const el = document.getElementById("config-data-message");
 
