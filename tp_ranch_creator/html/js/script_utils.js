@@ -137,6 +137,18 @@ function ClearAll() {
   $("#herding-wolf-attacks-chance-input").val('30');
 
   $("#animals-actions-create-button").hide();
+
+  const animalConfig = [
+    { id: "animal-store-chicken-switch", name: "a_c_chicken_01" },
+    { id: "animal-store-sheep-switch", name: "a_c_sheep_01" },
+    { id: "animal-store-cow-switch", name: "a_c_cow" },
+    { id: "animal-store-goat-switch", name: "a_c_goat_01" },
+    { id: "animal-store-pig-switch", name: "a_c_pig_01" }
+  ];
+
+  animalConfig.forEach(({ id }) => {
+    $("#" + id).prop("checked", false);
+  });
 }
 
 function HideAll() {
