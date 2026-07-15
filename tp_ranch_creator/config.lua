@@ -45,7 +45,7 @@ Config.HerdingWolfActionMarkers = {
 
 Config.Command = { -- /openrancheditor
 
-  Suggestion = "Perform this command to open the ranch editor for creating new ranches.",
+  Suggestion = "Perform this command to open the ranch editor for creating new ranches or editing existing ones.",
 
   -- The discord roles to execute this command.
   DiscordRoles = { 670899926783361024, 1174077274153299988 },
