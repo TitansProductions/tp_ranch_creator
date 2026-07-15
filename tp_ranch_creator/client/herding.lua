@@ -49,7 +49,7 @@ RegisterNUICallback('startHerdingPointPlacement', function(data)
 					end
 
 					spawnpoint = GetTableLength(TOTAL_HERDING_POINTS) + 1
-					TOTAL_HERDING_POINTS[spawnpoint] = { x = coords.x, y = coords.y, z = coords.z }
+					TOTAL_HERDING_POINTS[spawnpoint] = { x = coords.x, y = coords.y, z = coords.z } -- icon = true, adjust_icon_height = 1.8, marker = true, marker_xy = { x = 3.0, y = 3.0 }, marker_rgba = {r = 255, g = 255, b = 255, a = 55}, adjust_marker_height = 0.0 }
 					--returned_input_text = string.format('{ x = %s, y = %s, z = %s }', coords.x, coords.y, coords.z )
 
 					if GetTableLength(TOTAL_HERDING_POINTS) > 0 then
