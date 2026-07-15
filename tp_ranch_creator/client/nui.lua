@@ -32,6 +32,8 @@ local function ToggleUI (display, window)
 		ENTITIES_CONFIG_DATA = nil
 		ENTITIES_CONFIG_DATA = {}
 
+		TriggerEvent("tp_ranch_creator:client:has_active_editor", false)
+
 	else
 		PlayerData.HasNUIHidden = false
 		PlayerData.IsBusy = false
@@ -40,10 +42,15 @@ local function ToggleUI (display, window)
     SendNUIMessage({ type = "enable", enable = display, window = window })
 end
 
-function tableToLua(tbl)
+local function tableToLua(tbl)
+
+	if type(tbl) ~= "table" then
+        return 'n/a'
+    end
+	
     local order = {
-		"model",
-		"skin_preset",
+        "model",
+        "skin_preset",
         "x",
         "y",
         "z",
@@ -51,9 +58,32 @@ function tableToLua(tbl)
         "pitch",
         "roll",
         "yaw",
+        "icon",
         "adjust_icon_height",
+        "marker",
+        "marker_xy",
+        "marker_rgba",
+        "adjust_marker_height",
         "action_distance",
     }
+
+    local function valueToLua(value)
+        local valueType = type(value)
+
+        if valueType == "string" then
+            return string.format("%q", value)
+        elseif valueType == "boolean" then
+            return value and "true" or "false"
+        elseif valueType == "number" then
+            return tostring(value)
+        elseif valueType == "table" then
+            return tableToLua(value)
+        elseif valueType == "nil" then
+            return "nil"
+        else
+            return tostring(value)
+        end
+    end
 
     local parts = {}
     local used = {}
@@ -61,15 +91,7 @@ function tableToLua(tbl)
     -- Write keys in the preferred order
     for _, key in ipairs(order) do
         if tbl[key] ~= nil then
-            local value = tbl[key]
-
-            if type(value) == "string" then
-                value = string.format("%q", value)
-            else
-                value = tostring(value)
-            end
-
-            table.insert(parts, ("%s = %s"):format(key, value))
+            table.insert(parts, ("%s = %s"):format(key, valueToLua(tbl[key])))
             used[key] = true
         end
     end
@@ -77,13 +99,7 @@ function tableToLua(tbl)
     -- Write any remaining keys
     for key, value in pairs(tbl) do
         if not used[key] then
-            if type(value) == "string" then
-                value = string.format("%q", value)
-            else
-                value = tostring(value)
-            end
-
-            table.insert(parts, ("%s = %s"):format(key, value))
+            table.insert(parts, ("%s = %s"):format(key, valueToLua(value)))
         end
     end
 
@@ -127,6 +143,13 @@ function GetPlayerData()
 end
 
 function OpenRanchCreator(ranchId)
+
+	if PlayerData.HasNUIActive then 
+		return
+	end
+
+	TriggerEvent("tp_ranch_creator:client:has_active_editor", true)
+	
 	SendNUIMessage({ action = 'insertLocales', locales = Locales })
 
 	PlayerData.SelectedRanchId = 0
@@ -140,6 +163,515 @@ function OpenRanchCreator(ranchId)
 	TOTAL_HERDING_POINTS = {}
 	TOTAL_HERDING_WOLF_ATTACK_SPAWN_POINTS = {}
 	PLACED_RANCH_ENTITIES = {}
+
+	if ranchId ~= nil and ranchId ~= 0 then 
+
+		local getRanchData = exports.tp_libs:ClientRpcCall().Callback.TriggerAwait("tp_ranch_creator:callbacks:getRanchDataById", { ranchId = ranchId } )
+
+		if getRanchData == nil then
+			-- notify does not exist
+			TriggerEvent("tp_ranch_creator:client:has_active_editor", false)
+			print('Attempted to edit a non-existing ranch with the id: ' .. ranchId .. ' - the ranch must exist on tp_ranch config.')
+			return
+		end
+
+		TOTAL_HERDING_SPAWN_POINTS = getRanchData.Herding.SpawnPoints
+		TOTAL_HERDING_POINTS       = getRanchData.Herding.HerdingPoints
+		TOTAL_HERDING_WOLF_ATTACK_SPAWN_POINTS = getRanchData.Herding.WolfAttack.SpawnPoints
+
+		SendNUIMessage({ 
+			action = 'setExistingDataBasics', 
+			result = getRanchData,
+			ranchId = ranchId,
+		})
+
+		SendNUIMessage({ 
+			action = 'setHerdingExistingData', 
+			wolf_data = getRanchData.Herding.WolfAttack
+		})
+
+		-- Load milk jug object
+
+		if getRanchData.MilkContainerCoords then
+			LoadModel('p_milkcan01x')
+
+			local milk_jug = CreateObject(GetHashKey('p_milkcan01x'), getRanchData.MilkContainerCoords.x, getRanchData.MilkContainerCoords.y, getRanchData.MilkContainerCoords.z, false, false, false, false, false)
+			
+			SetEntityVisible(milk_jug, true)
+			SetEntityCollision(milk_jug, true)
+			SetEntityRotation(milk_jug, getRanchData.MilkContainerCoords.pitch, getRanchData.MilkContainerCoords.roll, getRanchData.MilkContainerCoords.yaw, 2)
+			SetEntityCoords(milk_jug, getRanchData.MilkContainerCoords.x, getRanchData.MilkContainerCoords.y, getRanchData.MilkContainerCoords.z)
+	
+			PLACED_RANCH_ENTITIES['MILK_CONTAINER_1'] = { entity = milk_jug, is_object = true, model = 'p_milkcan01x', coords = getRanchData.MilkContainerCoords, pitch = getRanchData.MilkContainerCoords.pitch, roll = getRanchData.MilkContainerCoords.roll, yaw = getRanchData.MilkContainerCoords.yaw}
+		
+		end
+
+		if getRanchData.WaterBarrelCoords then
+			LoadModel('p_barrelhalf02x')
+
+			local water_barrel = CreateObject(GetHashKey('p_barrelhalf02x'), getRanchData.WaterBarrelCoords.x, getRanchData.WaterBarrelCoords.y, getRanchData.WaterBarrelCoords.z, false, false, false, false, false)
+			
+			SetEntityVisible(water_barrel, true)
+			SetEntityCollision(water_barrel, true)
+			SetEntityRotation(water_barrel, getRanchData.WaterBarrelCoords.pitch, getRanchData.WaterBarrelCoords.roll, getRanchData.WaterBarrelCoords.yaw, 2)
+			SetEntityCoords(water_barrel, getRanchData.WaterBarrelCoords.x, getRanchData.WaterBarrelCoords.y, getRanchData.WaterBarrelCoords.z)
+	
+			PLACED_RANCH_ENTITIES['WATER_BARREL'] = { entity = water_barrel, is_object = true, model = 'p_barrelhalf02x', coords = getRanchData.WaterBarrelCoords, pitch = getRanchData.WaterBarrelCoords.pitch, roll = getRanchData.WaterBarrelCoords.roll, yaw = getRanchData.WaterBarrelCoords.yaw}
+
+		end
+
+		if getRanchData.PitchForkObjectCoords then
+			LoadModel('p_pitchfork01x')
+
+			local pitchfork = CreateObject(GetHashKey('p_pitchfork01x'), getRanchData.PitchForkObjectCoords.x, getRanchData.PitchForkObjectCoords.y, getRanchData.PitchForkObjectCoords.z, false, false, false, false, false)
+			
+			SetEntityVisible(pitchfork, true)
+			SetEntityCollision(pitchfork, true)
+			SetEntityRotation(pitchfork, getRanchData.PitchForkObjectCoords.pitch, getRanchData.PitchForkObjectCoords.roll, getRanchData.PitchForkObjectCoords.yaw, 2)
+			SetEntityCoords(pitchfork, getRanchData.PitchForkObjectCoords.x, getRanchData.PitchForkObjectCoords.y, getRanchData.PitchForkObjectCoords.z)
+	
+			PLACED_RANCH_ENTITIES['PITCH_FORK'] = { entity = pitchfork, is_object = true, model = 'p_pitchfork01x', coords = getRanchData.PitchForkObjectCoords, pitch = getRanchData.PitchForkObjectCoords.pitch, roll = getRanchData.PitchForkObjectCoords.roll, yaw = getRanchData.PitchForkObjectCoords.yaw}
+
+		end
+
+		if getRanchData.CauldronObject then
+			LoadModel(getRanchData.CauldronObject.object)
+
+			local cauldron = CreateObject(GetHashKey(getRanchData.CauldronObject.object), getRanchData.CauldronObject.x, getRanchData.CauldronObject.y, getRanchData.CauldronObject.z, false, false, false, false, false)
+			
+			SetEntityVisible(cauldron, true)
+			SetEntityCollision(cauldron, true)
+			SetEntityRotation(cauldron, getRanchData.CauldronObject.pitch, getRanchData.CauldronObject.roll, getRanchData.CauldronObject.yaw, 2)
+			SetEntityCoords(cauldron, getRanchData.CauldronObject.x, getRanchData.CauldronObject.y, getRanchData.CauldronObject.z)
+	
+			PLACED_RANCH_ENTITIES['CAULDRON_1'] = { entity = cauldron, is_object = true, model = getRanchData.CauldronObject.object, coords = getRanchData.CauldronObject, pitch = getRanchData.CauldronObject.pitch, roll = getRanchData.CauldronObject.roll, yaw = getRanchData.CauldronObject.yaw}
+
+		end
+
+		if ENTITIES_CONFIG_DATA['COW'] == nil then 
+			ENTITIES_CONFIG_DATA['COW'] = {}
+
+			ENTITIES_CONFIG_DATA['COW'].actions = {
+
+				['SPAWN']   = getRanchData.Animals['a_c_cow'].SpawnCoords,
+				['MILKING'] = getRanchData.Animals['a_c_cow'].StartMilkingCoords,
+				['BUCKET']  = getRanchData.Animals['a_c_cow'].MilkBucketCoords,
+				['POOP']    = getRanchData.Animals['a_c_cow'].PoopPositions,
+
+			}
+
+			ENTITIES_CONFIG_DATA['COW'].default_action = {}
+			ENTITIES_CONFIG_DATA['COW'].count = getRanchData.Animals['a_c_cow'].Total
+
+			ENTITIES_CONFIG_DATA['COW'].default_action['SPAWN'] = { x = 0, y = 0, z = 0 }
+			ENTITIES_CONFIG_DATA['COW'].default_action['MILKING'] = { x = 0, y = 0, z = 0, h = 0}
+			ENTITIES_CONFIG_DATA['COW'].default_action['BUCKET'] = { x = 0, y = 0, z = 0 }
+			ENTITIES_CONFIG_DATA['COW'].default_action['POOP'] = { x = 0, y = 0, z = 0 }
+
+			if GetTableLength(ENTITIES_CONFIG_DATA['COW'].actions['SPAWN']) > 0 then 
+
+				for _, entity in pairs (ENTITIES_CONFIG_DATA['COW'].actions['SPAWN']) do 
+
+					local model = 'a_c_cow'
+					LoadModel(model)
+
+					local _entity = CreatePed(GetHashKey(model), entity.x, entity.y, entity.z, entity.h, false, false, false, false )
+	
+					SetRandomOutfitVariation(_entity, true) -- set first outfit
+					SetModelAsNoLongerNeeded(GetHashKey(model))
+					SetEntityInvincible(_entity, true)
+					SetEntityCanBeDamaged(_entity, false)
+					SetEntityCollision(_entity, false)
+					SetPedScale(_entity, 0.9)
+					FreezeEntityPosition(_entity, true)
+					SetEntityInvincible(_entity, true)
+					SetEntityCanBeDamaged(_entity, false)
+					SetRelationshipBetweenGroups(1, GetPedRelationshipGroupHash(_entity), joaat('PLAYER'))
+
+					PLACED_RANCH_ENTITIES['COW-SPAWN-' .. _] = { entity = _entity, is_object = false, model = model, coords = { x = entity.x, y = entity.y, z = entity.z, h = entity.h} }
+
+				end
+
+			end
+
+			if GetTableLength(ENTITIES_CONFIG_DATA['COW'].actions['BUCKET']) > 0 then 
+
+				for _, obj in pairs (ENTITIES_CONFIG_DATA['COW'].actions['BUCKET']) do 
+
+					LoadModel( "s_bucketmilk01x" )
+	
+					local toVec  = vector3(obj.x, obj.y, obj.z)
+					local object = CreateObject(GetHashKey('s_bucketmilk01x'), toVec, false, false, false, false, false)
+				
+					SetEntityVisible(object, true)
+					SetEntityCollision(object, false)
+
+					PLACED_RANCH_ENTITIES['COW-BUCKET-' .. _] = { entity = object, is_object = true, model = "s_bucketmilk01x", coords = { x = obj.x, y = obj.y, z = obj.z, h = obj.h} }
+				end
+
+			end
+
+
+			if GetTableLength(ENTITIES_CONFIG_DATA['COW'].actions['POOP']) > 0 then 
+
+				for _, obj in pairs (ENTITIES_CONFIG_DATA['COW'].actions['POOP']) do 
+
+					LoadModel( "p_sheeppoop01x" )
+	
+					local toVec  = vector3(obj.x, obj.y, obj.z)
+					local object = CreateObject(GetHashKey('p_sheeppoop01x'), toVec, false, false, false, false, false)
+				
+					SetEntityVisible(object, true)
+					SetEntityCollision(object, true)
+					FreezeEntityPosition(object, true)
+					SetEntityFadeIn(object, true)
+
+					PlaceObjectOnGroundProperly(object, true)
+
+					PLACED_RANCH_ENTITIES['COW-POOP-' .. _] = { entity = object, is_object = true, model = "p_sheeppoop01x", coords = { x = obj.x, y = obj.y, z = obj.z, h = obj.h} }
+				end
+
+			end
+
+			-- spawn animal, bucket, poop
+		end
+
+		if ENTITIES_CONFIG_DATA['GOAT'] == nil then 
+			ENTITIES_CONFIG_DATA['GOAT'] = {}
+			ENTITIES_CONFIG_DATA['GOAT'].actions = {
+
+				['SPAWN']   = getRanchData.Animals['a_c_goat_01'].SpawnCoords,
+				['MILKING'] = getRanchData.Animals['a_c_goat_01'].StartMilkingCoords,
+				['BUCKET']  = getRanchData.Animals['a_c_goat_01'].MilkBucketCoords,
+				['POOP']    = getRanchData.Animals['a_c_goat_01'].PoopPositions,
+
+			}
+
+			ENTITIES_CONFIG_DATA['GOAT'].default_action = {}
+			ENTITIES_CONFIG_DATA['GOAT'].count = getRanchData.Animals['a_c_goat_01'].Total
+
+			ENTITIES_CONFIG_DATA['GOAT'].default_action['SPAWN'] = { x = 0, y = 0, z = 0 }
+			ENTITIES_CONFIG_DATA['GOAT'].default_action['MILKING'] = { x = 0, y = 0, z = 0, h = 0}
+			ENTITIES_CONFIG_DATA['GOAT'].default_action['BUCKET'] = { x = 0, y = 0, z = 0 }
+			ENTITIES_CONFIG_DATA['GOAT'].default_action['POOP'] = { x = 0, y = 0, z = 0 }
+
+			-- spawn animal, bucket, poop
+
+			if GetTableLength(ENTITIES_CONFIG_DATA['GOAT'].actions['SPAWN']) > 0 then 
+
+				for _, entity in pairs (ENTITIES_CONFIG_DATA['GOAT'].actions['SPAWN']) do 
+
+					local model = 'a_c_goat_01'
+					LoadModel(model)
+
+					local _entity = CreatePed(GetHashKey(model), entity.x, entity.y, entity.z, entity.h, false, false, false, false )
+	
+					SetRandomOutfitVariation(_entity, true) -- set first outfit
+					SetModelAsNoLongerNeeded(GetHashKey(model))
+					SetEntityInvincible(_entity, true)
+					SetEntityCanBeDamaged(_entity, false)
+					SetEntityCollision(_entity, false)
+					SetPedScale(_entity, 0.9)
+					FreezeEntityPosition(_entity, true)
+					SetEntityInvincible(_entity, true)
+					SetEntityCanBeDamaged(_entity, false)
+					SetRelationshipBetweenGroups(1, GetPedRelationshipGroupHash(_entity), joaat('PLAYER'))
+
+					PLACED_RANCH_ENTITIES['GOAT-SPAWN-' .. _] = { entity = _entity, is_object = false, model = model, coords = { x = entity.x, y = entity.y, z = entity.z, h = entity.h} }
+
+				end
+
+			end
+
+			if GetTableLength(ENTITIES_CONFIG_DATA['GOAT'].actions['BUCKET']) > 0 then 
+
+				for _, obj in pairs (ENTITIES_CONFIG_DATA['GOAT'].actions['BUCKET']) do 
+
+					LoadModel( "s_bucketmilk01x" )
+	
+					local toVec  = vector3(obj.x, obj.y, obj.z)
+					local object = CreateObject(GetHashKey('s_bucketmilk01x'), toVec, false, false, false, false, false)
+				
+					SetEntityVisible(object, true)
+					SetEntityCollision(object, false)
+
+					PLACED_RANCH_ENTITIES['GOAT-BUCKET-' .. _] = { entity = object, is_object = true, model = "s_bucketmilk01x", coords = { x = obj.x, y = obj.y, z = obj.z, h = obj.h} }
+				end
+
+			end
+
+			if GetTableLength(ENTITIES_CONFIG_DATA['GOAT'].actions['POOP']) > 0 then 
+
+				for _, obj in pairs (ENTITIES_CONFIG_DATA['GOAT'].actions['POOP']) do 
+
+					LoadModel( "p_sheeppoop01x" )
+	
+					local toVec  = vector3(obj.x, obj.y, obj.z)
+					local object = CreateObject(GetHashKey('p_sheeppoop01x'), toVec, false, false, false, false, false)
+				
+					SetEntityVisible(object, true)
+					SetEntityCollision(object, true)
+					FreezeEntityPosition(object, true)
+					SetEntityFadeIn(object, true)
+
+					PlaceObjectOnGroundProperly(object, true)
+
+					PLACED_RANCH_ENTITIES['GOAT-POOP-' .. _] = { entity = object, is_object = true, model = "p_sheeppoop01x", coords = { x = obj.x, y = obj.y, z = obj.z, h = obj.h} }
+				end
+
+			end
+		end
+
+		if ENTITIES_CONFIG_DATA['SHEEP'] == nil then 
+			ENTITIES_CONFIG_DATA['SHEEP'] = {}
+
+			ENTITIES_CONFIG_DATA['SHEEP'].actions = {
+				['SPAWN']    = getRanchData.Animals['a_c_sheep_01'].SpawnCoords,
+				['SHEARING'] = getRanchData.Animals['a_c_sheep_01'].TeleportPlayerShearingCoords,
+				['POOP']     = getRanchData.Animals['a_c_sheep_01'].PoopPositions,
+			}
+
+			ENTITIES_CONFIG_DATA['SHEEP'].default_action = {}
+			ENTITIES_CONFIG_DATA['SHEEP'].count = getRanchData.Animals['a_c_sheep_01'].Total
+
+			ENTITIES_CONFIG_DATA['SHEEP'].default_action['SPAWN'] = { x = 0, y = 0, z = 0 }
+			ENTITIES_CONFIG_DATA['SHEEP'].default_action['SHEARING'] = { x = 0, y = 0, z = 0, h = 0 }
+			ENTITIES_CONFIG_DATA['SHEEP'].default_action['POOP'] = { x = 0, y = 0, z = 0 }
+
+			-- spawn animal, poop
+
+			if GetTableLength(ENTITIES_CONFIG_DATA['SHEEP'].actions['SPAWN']) > 0 then 
+
+				for _, entity in pairs (ENTITIES_CONFIG_DATA['SHEEP'].actions['SPAWN']) do 
+
+					local model = 'a_c_sheep_01'
+					LoadModel(model)
+
+					local _entity = CreatePed(GetHashKey(model), entity.x, entity.y, entity.z, entity.h, false, false, false, false )
+	
+					SetRandomOutfitVariation(_entity, true) -- set first outfit
+					SetModelAsNoLongerNeeded(GetHashKey(model))
+					SetEntityInvincible(_entity, true)
+					SetEntityCanBeDamaged(_entity, false)
+					SetEntityCollision(_entity, false)
+					SetPedScale(_entity, 0.9)
+					FreezeEntityPosition(_entity, true)
+					SetEntityInvincible(_entity, true)
+					SetEntityCanBeDamaged(_entity, false)
+					SetRelationshipBetweenGroups(1, GetPedRelationshipGroupHash(_entity), joaat('PLAYER'))
+
+					PLACED_RANCH_ENTITIES['SHEEP-SPAWN-' .. _] = { entity = _entity, is_object = false, model = model, coords = { x = entity.x, y = entity.y, z = entity.z, h = entity.h} }
+
+				end
+
+			end
+
+			if GetTableLength(ENTITIES_CONFIG_DATA['SHEEP'].actions['POOP']) > 0 then 
+
+				for _, obj in pairs (ENTITIES_CONFIG_DATA['SHEEP'].actions['POOP']) do 
+
+					LoadModel( "p_sheeppoop01x" )
+	
+					local toVec  = vector3(obj.x, obj.y, obj.z)
+					local object = CreateObject(GetHashKey('p_sheeppoop01x'), toVec, false, false, false, false, false)
+				
+					SetEntityVisible(object, true)
+					SetEntityCollision(object, true)
+					FreezeEntityPosition(object, true)
+					SetEntityFadeIn(object, true)
+
+					PlaceObjectOnGroundProperly(object, true)
+
+					PLACED_RANCH_ENTITIES['SHEEP-POOP-' .. _] = { entity = object, is_object = true, model = "p_sheeppoop01x", coords = { x = obj.x, y = obj.y, z = obj.z, h = obj.h} }
+				end
+
+			end
+
+		end
+
+		
+		if ENTITIES_CONFIG_DATA['CHICKEN'] == nil then 
+
+			ENTITIES_CONFIG_DATA['CHICKEN'] = {}
+
+			ENTITIES_CONFIG_DATA['CHICKEN'].actions = {
+				['SPAWN']     = getRanchData.Animals['a_c_chicken_01'].SpawnCoords,
+				['EGG_SPAWN'] = getRanchData.Animals['a_c_chicken_01'].EggSpawnCoords,
+				['FEEDBAG']   = {
+					[1] = getRanchData.Animals['a_c_chicken_01'].FeedbagStandCoords,
+				},
+				['FEEDING']   = {
+					[1] = getRanchData.Animals['a_c_chicken_01'].StartFeedingCoords,
+				},
+				['DELIVERY']  = {
+					[1] = getRanchData.Animals['a_c_chicken_01'].ChickenFoodCoords,
+				},
+			}
+			ENTITIES_CONFIG_DATA['CHICKEN'].default_action = {}
+			ENTITIES_CONFIG_DATA['CHICKEN'].count = getRanchData.Animals['a_c_chicken_01'].Total
+
+			ENTITIES_CONFIG_DATA['CHICKEN'].default_action['SPAWN'] = { x = 0, y = 0, z = 0 }
+			ENTITIES_CONFIG_DATA['CHICKEN'].default_action['EGG_SPAWN'] = { x = 0, y = 0, z = 0, pitch = 0, roll = 0, yaw = 0 }
+		
+			ENTITIES_CONFIG_DATA['CHICKEN'].default_action['FEEDBAG'] = {
+				x = 0, 
+				y = 0, 
+				z = 0, 
+				pitch = 0, 
+				roll = 0,
+				yaw = 0, 
+				render_distance = 30.0,
+	
+				action_distance = 1.5,
+				display_icon_distance = 5.0,
+				adjust_icon_height = 2.0
+			}
+
+			ENTITIES_CONFIG_DATA['CHICKEN'].default_action['FEEDING'] = {
+				x = 0, 
+				y = 0, 
+				z = 0,
+	
+				display_icon_distance = 5.0,
+				action_distance = 2.5,
+				adjust_icon_height = 0.5
+			}
+
+			ENTITIES_CONFIG_DATA['CHICKEN'].default_action['DELIVERY'] = { 
+				x = 0, 
+				y = 0, 
+				z = 0, 
+				h = 0,
+				adjust_icon_height = 1.0,
+				action_distance = 1.3
+			}
+			
+			-- spawn animal, eggs, feedbag
+
+			if GetTableLength(ENTITIES_CONFIG_DATA['CHICKEN'].actions['SPAWN']) > 0 then 
+
+				for _, entity in pairs (ENTITIES_CONFIG_DATA['CHICKEN'].actions['SPAWN']) do 
+
+					local model = 'a_c_chicken_01'
+					LoadModel(model)
+
+					local _entity = CreatePed(GetHashKey(model), entity.x, entity.y, entity.z, entity.h, false, false, false, false )
+	
+					SetRandomOutfitVariation(_entity, true) -- set first outfit
+					SetModelAsNoLongerNeeded(GetHashKey(model))
+					SetEntityInvincible(_entity, true)
+					SetEntityCanBeDamaged(_entity, false)
+					SetEntityCollision(_entity, false)
+					SetPedScale(_entity, 0.9)
+					FreezeEntityPosition(_entity, true)
+					SetEntityInvincible(_entity, true)
+					SetEntityCanBeDamaged(_entity, false)
+					SetRelationshipBetweenGroups(1, GetPedRelationshipGroupHash(_entity), joaat('PLAYER'))
+					PlaceEntityOnGroundProperly(_entity, true)
+
+					PLACED_RANCH_ENTITIES['CHICKEN-SPAWN-' .. _] = { entity = _entity, is_object = false, model = model, coords = { x = entity.x, y = entity.y, z = entity.z, h = entity.h} }
+
+				end
+
+			end
+
+
+			if GetTableLength(ENTITIES_CONFIG_DATA['CHICKEN'].actions['EGG_SPAWN']) > 0 then 
+
+				for _, obj in pairs (ENTITIES_CONFIG_DATA['CHICKEN'].actions['EGG_SPAWN']) do 
+
+					LoadModel( 's_gatoregg01x' )
+
+					local toVec  = vector3( obj.x,  obj.y,  obj.z)
+					local object = CreateObject(GetHashKey('s_gatoregg01x'), toVec, false, false, false, false, false)
+		
+					SetEntityVisible(object, true)
+					SetEntityCollision(object, true)
+		
+					if obj.pitch and obj.roll and obj.yaw then  -- 1.1.2 added pitch roll yaw support
+						SetEntityRotation(object, obj.pitch,  obj.roll,  obj.yaw, 2)
+						SetEntityCoords(object,  obj.x,  obj.y,  obj.z)
+					end
+		
+					FreezeEntityPosition(object, true)
+		
+					SetEntityFadeIn(object, true)
+					PlaceObjectOnGroundProperly(object, true)
+
+					PLACED_RANCH_ENTITIES['CHICKEN-EGG_SPAWN-' .. _] = { entity = object, is_object = true, model = 's_gatoregg01x', coords = { x = obj.x, y = obj.y, z = obj.z, pitch = obj.pitch, roll = obj.roll, ywa = obj.yaw } }
+				end
+
+			end
+
+			if ENTITIES_CONFIG_DATA['CHICKEN'].actions['FEEDBAG'][1] then 
+
+				local obj = (ENTITIES_CONFIG_DATA['CHICKEN'].actions['FEEDBAG'][1])
+				
+				LoadModel( 'p_mp_feedbaghang01x' )
+
+				local toVec  = vector3( obj.x,  obj.y,  obj.z)
+				local object = CreateObject(GetHashKey('p_mp_feedbaghang01x'), toVec, false, false, false, false, false)
+	
+				SetEntityVisible(object, true)
+				SetEntityCollision(object, true)
+	
+				if obj.pitch and obj.roll and obj.yaw then  -- 1.1.2 added pitch roll yaw support
+					SetEntityRotation(object, obj.pitch,  obj.roll,  obj.yaw, 2)
+					SetEntityCoords(object,  obj.x,  obj.y,  obj.z)
+				end
+	
+				FreezeEntityPosition(object, true)
+	
+				SetEntityFadeIn(object, true)
+				--PlaceObjectOnGroundProperly(object, true)
+
+				PLACED_RANCH_ENTITIES['CHICKEN-FEEDBAG-1'] = { entity = object, is_object = true, model = 'p_mp_feedbaghang01x', coords = { x = obj.x, y = obj.y, z = obj.z, pitch = obj.pitch, roll = obj.roll, ywa = obj.yaw } }
+
+			end
+
+		end
+
+		if ENTITIES_CONFIG_DATA['PIG'] == nil then 
+
+			ENTITIES_CONFIG_DATA['PIG'] = {}
+
+			ENTITIES_CONFIG_DATA['PIG'].actions = {
+				['SPAWN'] = getRanchData.Animals['a_c_pig_01'].SpawnCoords,
+			}
+			
+			ENTITIES_CONFIG_DATA['PIG'].default_action = {}
+			ENTITIES_CONFIG_DATA['PIG'].count = getRanchData.Animals['a_c_pig_01'].Total
+
+			ENTITIES_CONFIG_DATA['PIG'].default_action['SPAWN'] = { x = 0, y = 0, z = 0 }
+
+			if GetTableLength(ENTITIES_CONFIG_DATA['PIG'].actions['SPAWN']) > 0 then 
+
+				for _, entity in pairs (ENTITIES_CONFIG_DATA['PIG'].actions['SPAWN']) do 
+
+					local model = 'a_c_pig_01'
+					LoadModel(model)
+
+					local _entity = CreatePed(GetHashKey(model), entity.x, entity.y, entity.z, entity.h, false, false, false, false )
+	
+					SetRandomOutfitVariation(_entity, true) -- set first outfit
+					SetModelAsNoLongerNeeded(GetHashKey(model))
+					SetEntityInvincible(_entity, true)
+					SetEntityCanBeDamaged(_entity, false)
+					SetEntityCollision(_entity, false)
+					SetPedScale(_entity, 0.9)
+					FreezeEntityPosition(_entity, true)
+					SetEntityInvincible(_entity, true)
+					SetEntityCanBeDamaged(_entity, false)
+					SetRelationshipBetweenGroups(1, GetPedRelationshipGroupHash(_entity), joaat('PLAYER'))
+
+					PLACED_RANCH_ENTITIES['PIG-SPAWN-' .. _] = { entity = _entity, is_object = false, model = model, coords = { x = entity.x, y = entity.y, z = entity.z, h = entity.h} }
+
+				end
+
+			end
+		end
+
+	end
 
 	CURRENT_LOADED_DATA_COUNT = 0
 
@@ -240,16 +772,19 @@ function OpenRanchCreator(ranchId)
 	
 			for _, herding_point in pairs (TOTAL_HERDING_POINTS) do 
 
-				local pointCoords = vector3(herding_point.x, herding_point.y, herding_point.z)
-				local distance     = #(coords - pointCoords)
-
-				if distance <= Config.RenderHerdingPointDistance then
-					sleep = 0
-					DrawText3D(pointCoords.x, pointCoords.y, pointCoords.z + 0.65, "#HERDING_POINT-".. _)
-					
-					if Config.HerdingActionMarkers.Enabled then
-						local RGBA = Config.HerdingActionMarkers.RGBA
-						Citizen.InvokeNative(0x2A32FAA57B937173, 0x94FDAE17, pointCoords.x, pointCoords.y, pointCoords.z - 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.3, RGBA.r, RGBA.g, RGBA.b, RGBA.a, false, true, 2, false, false, false, false)
+				if herding_point.x and herding_point.y and herding_point.z then
+					local pointCoords = vector3(herding_point.x, herding_point.y, herding_point.z)
+					local distance     = #(coords - pointCoords)
+	
+					if distance <= Config.RenderHerdingPointDistance then
+						sleep = 0
+						DrawText3D(pointCoords.x, pointCoords.y, pointCoords.z + 0.65, "#HERDING_POINT-".. _)
+						
+						if Config.HerdingActionMarkers.Enabled then
+							local RGBA = Config.HerdingActionMarkers.RGBA
+							Citizen.InvokeNative(0x2A32FAA57B937173, 0x94FDAE17, pointCoords.x, pointCoords.y, pointCoords.z - 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.3, RGBA.r, RGBA.g, RGBA.b, RGBA.a, false, true, 2, false, false, false, false)
+						end
+	
 					end
 
 				end
@@ -328,6 +863,11 @@ end)
 RegisterNetEvent("tp_ranch_creator:client:close")
 AddEventHandler("tp_ranch_creator:client:close", function()
     CloseNUI()
+end)
+
+RegisterNetEvent("tp_ranch_creator:client:has_active_editor")
+AddEventHandler("tp_ranch_creator:client:has_active_editor", function(state) -- 1.0.2
+    -- todo nothing
 end)
 
 ---------------------------------------------------------------
@@ -602,7 +1142,7 @@ RegisterNUICallback('request_herding_points_section', function(data)
 			allowed = false,
 		})
 
-		TOTAL_HERDING_POINTS = {}
+		--TOTAL_HERDING_POINTS = {}
 
 		return 
 	end
@@ -617,11 +1157,16 @@ RegisterNUICallback('request_herding_points_section', function(data)
 	if GetTableLength(TOTAL_HERDING_POINTS) > 0 then
 
 		for i = 1, GetTableLength(TOTAL_HERDING_POINTS) do
-			SendNUIMessage({ 
-				action             = 'insertHerdingPointListElement', 
-				spawn_point_count_index = i,
-				input_data         = tableToLua(TOTAL_HERDING_POINTS[i]),
-			})
+
+			local formatted = tableToLua(TOTAL_HERDING_POINTS[i])
+
+			if formatted ~= 'n/a' then
+				SendNUIMessage({ 
+					action             = 'insertHerdingPointListElement', 
+					spawn_point_count_index = i,
+					input_data         = formatted,
+				})
+			end
 	
 		end
 
@@ -767,7 +1312,7 @@ RegisterNUICallback('request_herding_wolf_attacks_points_section', function(data
 			allowed = false,
 		})
 
-		TOTAL_HERDING_WOLF_ATTACK_SPAWN_POINTS = {}
+		--TOTAL_HERDING_WOLF_ATTACK_SPAWN_POINTS = {}
 
 		return 
 	end
@@ -810,7 +1355,7 @@ RegisterNUICallback('request_spawn_points_section', function(data)
 			color = '#b32828',
 		})
 
-		TOTAL_HERDING_SPAWN_POINTS = {}
+		--TOTAL_HERDING_SPAWN_POINTS = {}
 
 		return 
 	end
