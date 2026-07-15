@@ -36,7 +36,7 @@ ClearPlacedRanchObjectsList = function()
 	if GetTableLength(PLACED_RANCH_ENTITIES) > 0 then 
 
 		for action_type, object in pairs (PLACED_RANCH_ENTITIES) do
-			RemoveEntityProperly(object.entity, joaat(object.model))
+			RemoveEntityProperly(object.entity, GetHashKey(object.model))
 		end
 	end
 
@@ -58,6 +58,8 @@ AddEventHandler('onResourceStop', function(resourceName)
 	end
 
 	ClearPlacedRanchObjectsList()
+
+	TriggerEvent("tp_ranch_creator:client:has_active_editor", false)
 
 end)
 
@@ -285,6 +287,7 @@ RegisterNUICallback('startCoordsPlacement', function(data)
 
 		local obj
 
+		print(action_index)
 		if PLACED_RANCH_ENTITIES[action_index] then
 			obj = PLACED_RANCH_ENTITIES[action_index].entity
 
@@ -294,6 +297,7 @@ RegisterNUICallback('startCoordsPlacement', function(data)
 			SetEntityVisible(obj, true)
 			SetEntityCollision(obj, false)
 		end
+
 
 		local pitch, roll, yaw = table.unpack(GetEntityRotation(obj, 2))
 
@@ -318,6 +322,7 @@ RegisterNUICallback('startCoordsPlacement', function(data)
 		
 		local pitch, roll, yaw
 
+
 		if PLACED_RANCH_ENTITIES[action_index] then
 			entity = PLACED_RANCH_ENTITIES[action_index].entity
 
@@ -337,6 +342,7 @@ RegisterNUICallback('startCoordsPlacement', function(data)
 			PlaceEntityOnGroundProperly(entity, true)
 
 			pitch, roll, yaw = table.unpack(GetEntityRotation(entity, 2))
+
 		end
 
 
@@ -496,6 +502,7 @@ RegisterNUICallback('startCoordsPlacement', function(data)
 
 
 				end
+
 
 				SendNUIMessage({
 					action = 'updateInputByName', 
