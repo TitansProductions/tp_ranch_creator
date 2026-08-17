@@ -42,7 +42,7 @@ local function ToggleUI (display, window)
     SendNUIMessage({ type = "enable", enable = display, window = window })
 end
 
-local function tableToLua(tbl)
+function tableToLua(tbl)
 
 	if type(tbl) ~= "table" then
         return 'n/a'
@@ -106,7 +106,7 @@ local function tableToLua(tbl)
     return "{ " .. table.concat(parts, ", ") .. " }"
 end
 
-local function tablesEqual(a, b)
+function tablesEqual(a, b)
     if a == b then
         return true
     end
