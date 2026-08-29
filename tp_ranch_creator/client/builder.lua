@@ -440,10 +440,6 @@ RegisterNUICallback('startCoordsPlacement', function(data)
 					returned_input_text = string.format('vector3(%s, %s, %s)', coords.x, coords.y, coords.z - 1.0)
 				end
 
-				if action_index == 'HAY_BARREL' then 
-					returned_input_text = string.format('{ x = %s, y = %s, z = %s }', coords.x, coords.y, coords.z)
-				end
-
 				local objectCoords, _pitch, _roll, _yaw
 
 				if Builder.Entity then 
