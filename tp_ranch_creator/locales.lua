@@ -11,7 +11,6 @@ Locales = {
 	['MENU_BUTTON_ANIMAL_STORE']    = "Animal Store",
 	['MENU_BUTTON_MILK_CONTAINER']  = "Milk Jug Container",
 	['MENU_BUTTON_WATER_BARREL']    = "Water Barrel",
-	['MENU_BUTTON_HAY_BARREL']      = "Hay Food",
 	['MENU_BUTTON_PITCH_FORK']      = "Pitch Fork",
 	['MENU_BUTTON_CAULDRON']        = "Cauldron",
 	['MENU_BUTTON_ANIMALS']         = "Animals & Spawn Positions",
@@ -63,12 +62,6 @@ Locales = {
 
 	['NUI_WATER_BARREL_DESC'] = "The placement of the water barrel, including the position where to deposit water for increasing its storage capacity. The water barrel is required for the animals water / thirst consumption system if active.\n\nYou can insert the coords through a game action(s).",
 	['NUI_WATER_BARREL_BUTTON'] = "Set Coords",
-
-	/* HAY SECTION */
-
-	['NUI_HAY_DESC'] = "The position where to deposit food (if item system is active) or deliver hay for increasing its animal feeding capacity. The hay food is required for the goats and cows food / hunger consumption system.\n\nYou can insert the coords through a game action(s).",
-	['NUI_HAY_ICON_DESC'] = "Would you like to display an icon above hay position when delivering hay? (If item system is disabled).",
-	['NUI_HAY_BUTTON'] = "Set Coords",
 
 	/* PITCHFORK SECTION */
 
