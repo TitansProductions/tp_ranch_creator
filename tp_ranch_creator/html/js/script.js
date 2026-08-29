@@ -96,10 +96,6 @@ $(function () {
       $("#water-barrel-description").text(item.locales['NUI_WATER_BARREL_DESC']);
       $("#water-barrel-position-button").text(item.locales['NUI_WATER_BARREL_BUTTON']);
 
-      $("#hay-barrel-description").text(item.locales['NUI_HAY_DESC']);
-      $("#hay-barrel-position-button").text(item.locales['NUI_HAY_BUTTON']);
-      $("#hay-barrel-icon-description").text(item.locales['NUI_HAY_ICON_DESC']);
-
       $("#pitch-fork-description").text(item.locales['NUI_PITCHFORK_DESC']);
       $("#pitch-fork-position-button").text(item.locales['NUI_PITCHFORK_BUTTON']);
 
@@ -228,21 +224,6 @@ $(function () {
           if (
             waterBarrel !== "" &&
             waterBarrel !== defaultWaterBarrel
-          ) {
-            progress += 100;
-          }
-
-          break;
-
-        case "HAY_BARREL":
-          const hayBarrel = $("#hay-barrel-position-input").val().trim();
-
-          const defaultHayBarrel =
-            "{ x = 0, y = 0, z = 0 }";
-
-          if (
-            hayBarrel !== "" &&
-            hayBarrel !== defaultHayBarrel
           ) {
             progress += 100;
           }
@@ -593,11 +574,6 @@ $(function () {
       $("#milk-container-deliver-input").val(FormatLuaInLine(prod_result.DeliverProductCoords));
 
       $("#water-barrel-position-input").val(FormatLuaInLine(prod_result.WaterBarrelCoords));
-
-      $("#hay-barrel-position-input").val(FormatLuaInLine(prod_result.HayFoodCoords));
-
-      $("#hay-barrel-display-icon-label").prop("checked", prod_result.HayFoodCoords.display_icon);
-      $("#hay-barrel-display-not-icon-label").prop("checked", !prod_result.HayFoodCoords.display_icon);
 
       $("#pitch-fork-position-input").val(FormatLuaInLine(prod_result.PitchForkObjectCoords));
 
@@ -1160,11 +1136,6 @@ $(function () {
         OPENED_SECTION_INDEX_CLASS_NAME = ".water-barrel";
         break;
 
-      case "HAY_BARREL":
-        $(".hay-barrel").fadeIn();
-        OPENED_SECTION_INDEX_CLASS_NAME = ".hay-barrel";
-        break;
-
       case "PITCH_FORK":
         $(".pitch-fork").fadeIn();
         OPENED_SECTION_INDEX_CLASS_NAME = ".pitch-fork";
@@ -1362,19 +1333,6 @@ $(function () {
 
   });
 
-  // Hay 
-
-  $("#main").on("click", "#hay-barrel-position-button", function () {
-    PlayButtonClickSound();
-
-    $.post('http://tp_ranch_creator/startCoordsPlacement', JSON.stringify({
-      action_index: OPENED_SECTION_INDEX_NAME,
-      input_class_index: "#hay-barrel-position-input",
-
-    }));
-
-  });
-
   // pitchfork
 
   $("#main").on("click", "#pitch-fork-position-button", function () {
@@ -1550,24 +1508,6 @@ DeliverProductCoords = ${access_milk_jug_deliver_coords},
 WaterBarrelCoords = ${waterBarrelCoords},
 WaterBarrelDistance = 1.45,
         `;
-        break;
-
-      case "HAY_BARREL":
-
-        let hayinput = $("#hay-barrel-position-input").val().trim();
-
-        const displayIcon = $('input[name="hay-diplay-item-method"]:checked').val() == "1";
-
-        hayinput = hayinput.replace(
-          /\}$/,
-          `, display_icon = ${displayIcon}, display_icon_distance = 2.0, adjust_icon_height = 0.5, action_distance = 0.9 }`
-        );
-
-        RETRIEVED_CLASS_CONFIG_DATA = `
--- The coords to add food for the cows and goats.
--- Set display_icon to true to display an icon on the hay position when delivering hay (if item system is disabled)
-HayFoodCoords = ${hayinput},
-      `;
         break;
 
       case "PITCH_FORK":
@@ -1884,16 +1824,6 @@ ${HERDING_WOLF_SPAWN_POINTS_CONFIG_DATA == null ? "" : FormatLuaInLine(HERDING_W
     let pitchforkinput = $("#pitch-fork-position-input").val().trim();
     const pitchforkCoords = parseXYZWithPRY2(pitchforkinput);
 
-    let hayinput = $("#hay-barrel-position-input").val().trim();
-
-    const displayIcon = $('input[name="hay-diplay-item-method"]:checked').val() == "1";
-
-    hayinput = hayinput.replace(
-      /\}$/,
-      `, display_icon = ${displayIcon}, display_icon_distance = 2.0, adjust_icon_height = 0.5, action_distance = 0.9 }`
-    );
-
-
     const animals = [];
 
     const animalConfig = [
@@ -2018,9 +1948,6 @@ AnimalStore = {
         ${animals.join("\n        ")}
     },
 },
-
---The coords to add food for the cows and goats.
-HayFoodCoords = ${hayinput},
 
 -- The pitchfork object placement.
 PitchForkObjectCoords = ${pitchforkCoords},
